@@ -1,11 +1,8 @@
 import pymongo
 import json
-import queries  # Assumed this is a custom module you have
+import os
+
 mongodb_uri = 'mongodb://MYUSERNAME:MYPASSWORD@localhost:27018/?authSource=test'
-
-# jeu de données books.json
-
-cur_query = []
 
 try:
     client = pymongo.MongoClient(mongodb_uri)
@@ -18,49 +15,77 @@ try:
 
     # Insertion des données
     if "books" not in bd.list_collection_names():
-        insertion_books = books.insert_many(file_data)
-        cur_query.append({"Insertion": insertion_books.inserted_ids})
+        books.insert_many(file_data)
     else:
         print("La collection existe déjà")
-        cur_query.append("La collection books existe déjà")
+
+        if os.path.exists("historique.txt"):
+            os.remove("historique.txt")
 
     # Get the informations about the shards - sharding
-    print("### --- On récupère les informations sur les shards avec la commande sh.status() --- ###")
+    print("### --- On recupere les informations sur les shards avec la commande sh.status() --- ###")
     informations_shards = client["admin"].command('listShards')
-    cur_query.append({"Shards Info": informations_shards})
-
     for shard in informations_shards["shards"]:
         print(shard)
 
-    print("### ---- On récupère les informations sur les collections --- ###")
+    print("### ---- On recupere les informations sur les collections --- ###")
     collections = bd.list_collection_names()
-    cur_query.append({"Collections": collections})
     for collection in collections:
         print(collection)
 
+        
+    def log_query_results(collection_name, action, query, results):
+        with open("historique.txt", "a") as history_file:
+            history_file.write(f"Table: {collection_name}\n")
+            history_file.write(f"Action: {action}\n")
+            history_file.write(f"Query: {json.dumps(query)}\n")
+            if action == "update_many":
+                history_file.write(f"Matched count: {results.matched_count}\n")
+                history_file.write(f"Modified count: {results.modified_count}\n")
+            else:
+                for result in results:
+                    print(result)
+                    history_file.write(f"{json.dumps(result)}\n")
+            print("")
+
+    def execute_action(action, collection, query=None, update=None):
+        if action == "Find":
+            results = collection.find(query)
+            log_query_results(collection.name, action, query, results)
+        elif action == "update_many":
+            results = collection.update_many(query, update)
+            log_query_results(collection.name, action, query, update)
+        else:
+            print(f"Action {action} not recognized")
+
+    # Example usage
+    action = "Find"
+    query = {"title": "The Catcher in the Rye - J.D. Salinger"}
+    execute_action(action, books, query=query)
+
+    action = "update_many"
+    query = {"categories": {"$regex": "Java", "$options": "i"}}
+    update = {"$inc": {"pageCount": 50}}
+    execute_action(action, books, query=query, update=update)
+
     print("### --- Affichage de la collection books --- ###")
-    books_entries = list(books.find())  # Convert cursor to list to store results
-    cur_query.append({"Books": books_entries})
-    for book in books_entries:
+    books_entrees = books.find()
+    for book in books_entrees:
         print(book)
 
-    # Lecture d'une collection spécifique
+    # print("### --- on va modifier les données  --- ###")
+    # books.update_one({"title": "PFC Programmer's Reference Manual"}, {"$set": {"title": "The Catcher in the Rye - J.D. Salinger"}})
     print("### --- Read collection --- ###")
-    books_entries = list(books.find({"title": "The Catcher in the Rye - J.D. Salinger"}))  # Convert to list
-    cur_query.append({"Filtered Books": books_entries})
-    for book in books_entries:
-        print(book)
+    query = {"title": "The Catcher in the Rye - J.D. Salinger"}
+    
+    books_entrees = books.find(query)
+
+    query = {"categories": {"$regex": "Java", "$options": "i"}}
+    update = {"$inc": {"pageCount": 50}}
+
+    books_update = books.update_many(query, update)
 
 except pymongo.errors.ConnectionFailure as e:
-    print(f"Erreur de connexion: {e}")
-    cur_query.append({"ConnectionFailure": str(e)})
+    print(e)
 except Exception as e:
-    print(f"Erreur: {e}")
-    cur_query.append({"Exception": str(e)})
-
-# Enregistrement de l'historique des requêtes dans le fichier
-with open("historique.txt", "w") as historique:
-    for entry in cur_query:
-        historique.write(str(entry) + "\n")
-
-print("Historique des requêtes enregistré dans historique.txt")
+    print(e)
