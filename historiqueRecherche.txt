@@ -1,0 +1,17 @@
+
+Première parti des recherches :
+
+https://pymongo.readthedocs.io/en/stable/
+https://hub.docker.com/_/alpine
+https://www.docker.com/blog/how-to-use-the-alpine-docker-official-image/
+https://github.com/vrnetlab/vrnetlab
+https://stackoverflow.com/questions/63999847/how-to-use-docker-container-as-a-router-for-other-containers-in-the-same-network
+https://stackoverflow.com/questions/52930341/pymongo-dnspython-module-must-be-installed-to-use-mongodbsrv-uris
+https://stackoverflow.com/questions/56128397/how-to-connect-to-mongo-inside-a-docker-container-using-pymongo
+
+
+Utile pour la réalisation final :
+
+https://github.com/Anisse-Imer/mongo-shard-docker-compose/tree/master 
+https://github.com/minhhungit/mongodb-cluster-docker-compose
+

@@ -1,0 +1,144 @@
+services:
+  ## Router
+  router1:
+    image: mongo:latest
+    command: mongos --port 27017 --configdb configserver/config01:27017,config02:27017,config03:27017 --bind_ip_all
+    ports:
+      - 27017:27017
+    volumes:
+      - ./scripts:/scripts
+    environment:
+    - MONGO_INITDB_ROOT_USERNAME=MYUSERNAME
+    - MONGO_INITDB_ROOT_PASSWORD=MYPASSWORD
+    depends_on:
+      - config01
+      - config02
+      - config03
+      - principal_a
+      - secondaire_a_1
+      - secondaire_a_2
+      - secondaire_a_3
+      - principal_b
+      - secondaire_b_1
+      - secondaire_b_2
+      - secondaire_b_3
+      - principal_c
+      - secondaire_c_1
+      - secondaire_c_2
+      - secondaire_c_3
+  router2:
+    image: mongo:latest
+    command: mongos --port 27017 --configdb configserver/config01:27017,config02:27017,config03:27017 --bind_ip_all
+    ports:
+      - 27018:27017
+    volumes:
+      - ./scripts:/scripts
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=MYUSERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=MYPASSWORD
+    links:
+      - router1
+    depends_on:
+      - config01
+      - config02
+      - config03
+      - principal_a
+      - secondaire_a_1
+      - secondaire_a_2
+      - secondaire_a_3
+      - principal_b
+      - secondaire_b_1
+      - secondaire_b_2
+      - secondaire_b_3
+      - principal_c
+      - secondaire_c_1
+      - secondaire_c_2
+      - secondaire_c_3
+
+  ## Config Servers
+  config01:
+    image: mongo:latest
+    command: mongod --port 27017 --configsvr --replSet configserver
+    volumes:
+      - ./scripts:/scripts
+    ports:
+      - 27019:27017
+  config02:
+    image: mongo:latest
+    command: mongod --port 27017 --configsvr --replSet configserver
+    volumes:
+      - ./scripts:/scripts
+  config03:
+    image: mongo:latest
+    command: mongod --port 27017 --configsvr --replSet configserver
+    volumes:
+      - ./scripts:/scripts
+
+  ## Shards principal_a
+  principal_a: 
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard01
+    ports:
+      - 27020:27017
+    volumes:
+      - ./scripts:/scripts
+  secondaire_a_1:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard01
+    volumes:
+      - ./scripts:/scripts
+  secondaire_a_2:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard01
+    volumes:
+      - ./scripts:/scripts
+  secondaire_a_3:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard01
+    volumes:
+      - ./scripts:/scripts
+  principal_b:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard02
+    ports:
+      - 27021:27017
+    volumes:
+      - ./scripts:/scripts
+  secondaire_b_1:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard02
+    volumes:
+      - ./scripts:/scripts
+  secondaire_b_2:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard02
+    volumes:
+      - ./scripts:/scripts
+  secondaire_b_3:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard02
+    volumes:
+      - ./scripts:/scripts
+  
+  principal_c:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard03
+    ports:
+      - 27022:27017
+    volumes:
+      - ./scripts:/scripts
+  secondaire_c_1:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard03
+    volumes:
+      - ./scripts:/scripts
+  secondaire_c_2:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard03
+    volumes:
+      - ./scripts:/scripts
+  secondaire_c_3:
+    image: mongo:latest
+    command: mongod --port 27017 --shardsvr --replSet shard03
+    volumes:
+      - ./scripts:/scripts
